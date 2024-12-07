@@ -2556,6 +2556,7 @@ static cJSON *
 JSON_read(int fd)
 {
     uint32_t hsize, nsize;
+    size_t strsize;
     char *str;
     cJSON *json = NULL;
     int rc;
@@ -2568,7 +2569,9 @@ JSON_read(int fd)
     if (Nread(fd, (char*) &nsize, sizeof(nsize), Ptcp) >= 0) {
 	hsize = ntohl(nsize);
 	/* Allocate a buffer to hold the JSON */
-	str = (char *) calloc(sizeof(char), hsize+1);	/* +1 for trailing null */
+	strsize = hsize + 1;              /* +1 for trailing NULL */
+	if (strsize) {
+	str = (char *) calloc(sizeof(char), strsize);
 	if (str != NULL) {
 	    rc = Nread(fd, str, hsize, Ptcp);
 	    if (rc >= 0) {
@@ -2587,6 +2590,10 @@ JSON_read(int fd)
 	    }
 	}
 	free(str);
+	}
+	else {
+	    printf("WARNING:  Data length overflow\n");
+	}
     }
     return json;
 }
